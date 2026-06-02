@@ -40,8 +40,6 @@ app.use(
   })
 );
 
-// Ensure preflight OPTIONS requests are handled for all routes.
-app.options('*', cors());
 app.use(express.json());
 
 app.get('/health', (req, res) => {
