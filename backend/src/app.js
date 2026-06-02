@@ -8,19 +8,18 @@ const errorMiddleware = require('./middleware/errorMiddleware');
 
 const app = express();
 
-const clientUrls = (process.env.CLIENT_URL || '')
+const clientUrls = (process.env.CLIENT_URL || process.env.CORS_ORIGINS || '')
   .split(',')
   .map((url) => url.trim())
   .filter(Boolean);
 
-const allowedOrigins = [
-  process.env.CLIENT_URL,
+const allowedOrigins = new Set([
+  ...clientUrls,
   'http://localhost:3000',
   'http://localhost:3001',
-  ...clientUrls,
   'http://localhost:5173',
   'http://localhost:5174',
-].filter(Boolean);
+]);
 
 app.use(
   cors({
@@ -30,12 +29,17 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow any Railway production deployment URL.
-      if (origin.endsWith('.up.railway.app')) {
+      // Allow localhost with any port for local frontend runs.
+      if (/^https?:\/\/localhost:\d+$/.test(origin)) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      // Allow common hosted frontend preview domains.
+      if (origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app')) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.has(origin)) {
         return callback(null, true);
       }
 
