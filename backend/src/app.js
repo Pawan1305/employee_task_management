@@ -10,6 +10,8 @@ const app = express();
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
   'http://localhost:5173',
   'http://localhost:5174',
 ].filter(Boolean);
@@ -18,13 +20,28 @@ app.use(
   cors({
     origin(origin, callback) {
       // Allow requests without Origin header (e.g., curl/postman/server-to-server).
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) {
         return callback(null, true);
       }
+
+      // Allow any Railway production deployment URL.
+      if (origin.endsWith('.up.railway.app')) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
+    credentials: true,
   })
 );
+
+// Ensure preflight OPTIONS requests are handled for all routes.
+app.options('*', cors());
 app.use(express.json());
 
 app.get('/health', (req, res) => {
