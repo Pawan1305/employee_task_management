@@ -4,6 +4,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = require('./src/app');
 const pool = require('./src/config/db');
+const initDb = require('./src/config/initDb');
 
 const PORT = Number(process.env.PORT || 5000);
 const DB_SOURCE = process.env.DATABASE_URL || process.env.MYSQL_URL
@@ -19,6 +20,8 @@ async function startServer() {
     conn.release();
     // eslint-disable-next-line no-console
     console.log('Database connected successfully.');
+
+    await initDb();
 
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console
